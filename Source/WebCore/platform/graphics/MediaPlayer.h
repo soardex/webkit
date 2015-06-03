@@ -36,10 +36,10 @@
 #include "URL.h"
 #include "LayoutRect.h"
 #include "MediaPlayerEnums.h"
-#include "MediaSession.h"
 #include "NativeImagePtr.h"
 #include "PlatformLayer.h"
 #include "PlatformMediaResourceLoader.h"
+#include "PlatformMediaSession.h"
 #include "Timer.h"
 #include "VideoTrackPrivate.h"
 #include <runtime/Uint8Array.h>
@@ -268,7 +268,7 @@ public:
 #endif
     
     virtual bool mediaPlayerShouldWaitForResponseToAuthenticationChallenge(const AuthenticationChallenge&) { return false; }
-    virtual void mediaPlayerHandlePlaybackCommand(MediaSession::RemoteControlCommandType) { }
+    virtual void mediaPlayerHandlePlaybackCommand(PlatformMediaSession::RemoteControlCommandType) { }
 
     virtual String mediaPlayerSourceApplicationIdentifier() const { return emptyString(); }
 
@@ -276,6 +276,8 @@ public:
     virtual void mediaPlayerEngineFailedToLoad() const { }
 
     virtual double mediaPlayerRequestedPlaybackRate() const { return 0; }
+    virtual MediaPlayerEnums::VideoFullscreenMode mediaPlayerFullscreenMode() const { return MediaPlayerEnums::VideoFullscreenModeNone; }
+    virtual Vector<String> mediaPlayerPreferredAudioCharacteristics() const { return Vector<String>(); }
 };
 
 class MediaPlayerSupportsTypeClient {
@@ -314,6 +316,8 @@ public:
     void setVideoFullscreenFrame(FloatRect);
     using MediaPlayerEnums::VideoGravity;
     void setVideoFullscreenGravity(VideoGravity);
+    void setVideoFullscreenMode(VideoFullscreenMode);
+    VideoFullscreenMode fullscreenMode() const;
 
     NSArray *timedMetadata() const;
     String accessLog() const;
@@ -464,8 +468,6 @@ public:
 #endif
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-    bool isCurrentPlaybackTargetWireless() const;
-
     enum WirelessPlaybackTargetType { TargetTypeNone, TargetTypeAirPlay, TargetTypeTVOut };
     WirelessPlaybackTargetType wirelessPlaybackTargetType() const;
 
@@ -477,8 +479,8 @@ public:
     void currentPlaybackTargetIsWirelessChanged();
     void playbackTargetAvailabilityChanged();
 
+    bool isCurrentPlaybackTargetWireless() const;
     bool canPlayToWirelessPlaybackTarget() const;
-    bool isPlayingToWirelessPlaybackTarget() const;
     void setWirelessPlaybackTarget(Ref<MediaPlaybackTarget>&&);
 
     void setShouldPlayToPlaybackTarget(bool);
@@ -555,6 +557,7 @@ public:
     bool requiresTextTrackRepresentation() const;
     void setTextTrackRepresentation(TextTrackRepresentation*);
     void syncTextTrackBounds();
+    void tracksChanged();
 #if ENABLE(AVF_CAPTIONS)
     void notifyTrackModeChanged();
     Vector<RefPtr<PlatformTextTrack>> outOfBandTrackSources();
@@ -591,8 +594,9 @@ public:
 #endif
 
     bool shouldWaitForResponseToAuthenticationChallenge(const AuthenticationChallenge&);
-    void handlePlaybackCommand(MediaSession::RemoteControlCommandType);
+    void handlePlaybackCommand(PlatformMediaSession::RemoteControlCommandType);
     String sourceApplicationIdentifier() const;
+    Vector<String> preferredAudioCharacteristics() const;
 
 private:
     const MediaPlayerFactory* nextBestMediaEngine(const MediaPlayerFactory*) const;

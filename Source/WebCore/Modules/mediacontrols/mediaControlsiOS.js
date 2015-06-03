@@ -65,7 +65,7 @@ ControllerIOS.prototype = {
     },
 
     shouldHaveStartPlaybackButton: function() {
-        var allowsInline = this.host.mediaPlaybackAllowsInline;
+        var allowsInline = this.host.allowsInlineMediaPlayback;
 
         if (this.isPlaying || (this.hasPlayed && allowsInline))
             return false;
@@ -541,11 +541,11 @@ ControllerIOS.prototype = {
     showControls: function()
     {
         this.updateShouldListenForPlaybackTargetAvailabilityEvent();
-        if (this.showInlinePlaybackPlaceholderOnly())
+        if (!this.video.controls)
             return;
         
         this.updateForShowingControls();
-        if (this.shouldHaveControls()) {
+        if (this.shouldHaveControls() && !this.controls.panelContainer.parentElement) {
             this.base.appendChild(this.controls.inlinePlaybackPlaceholder);
             this.base.appendChild(this.controls.panelContainer);
         }
@@ -570,6 +570,8 @@ ControllerIOS.prototype = {
                 this.controls.inlinePlaybackPlaceholder.classList.remove(this.ClassNames.optimized);
                 this.controls.inlinePlaybackPlaceholderTextTop.classList.remove(this.ClassNames.optimized);
                 this.controls.inlinePlaybackPlaceholderTextBottom.classList.remove(this.ClassNames.optimized);
+
+                this.controls.optimizedFullscreenButton.classList.remove(this.ClassNames.returnFromOptimized);
                 break;
             case 'optimized':
                 var backgroundImage = "url('" + this.host.mediaUIImageData("optimized-fullscreen-placeholder") + "')";
@@ -582,12 +584,16 @@ ControllerIOS.prototype = {
                 this.controls.inlinePlaybackPlaceholderTextTop.classList.add(this.ClassNames.optimized);
                 this.controls.inlinePlaybackPlaceholderTextBottom.innerText = "";
                 this.controls.inlinePlaybackPlaceholderTextBottom.classList.add(this.ClassNames.optimized);
+
+                this.controls.optimizedFullscreenButton.classList.add(this.ClassNames.returnFromOptimized);
                 break;
             default:
                 this.controls.inlinePlaybackPlaceholder.style.backgroundImage = "";
                 this.controls.inlinePlaybackPlaceholder.classList.remove(this.ClassNames.optimized);
                 this.controls.inlinePlaybackPlaceholderTextTop.classList.remove(this.ClassNames.optimized);
                 this.controls.inlinePlaybackPlaceholderTextBottom.classList.remove(this.ClassNames.optimized);
+
+                this.controls.optimizedFullscreenButton.classList.remove(this.ClassNames.returnFromOptimized);
                 break;
         }
 

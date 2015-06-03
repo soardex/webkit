@@ -73,12 +73,12 @@ public:
 private:
     ReadableJSStream(ScriptExecutionContext&, Ref<ReadableJSStream::Source>&&);
 
+    virtual bool hasValue() const override;
+    virtual JSC::JSValue read() override;
+
     std::unique_ptr<ReadableStreamController> m_controller;
     JSC::Strong<JSC::Unknown> m_error;
 };
-
-void setInternalSlotToObject(JSC::ExecState*, JSC::JSValue, JSC::PrivateName&, JSC::JSValue);
-JSC::JSValue getInternalSlotFromObject(JSC::ExecState*, JSC::JSValue, JSC::PrivateName&);
 
 } // namespace WebCore
 

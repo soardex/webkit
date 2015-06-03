@@ -747,8 +747,6 @@ InjectedScript.prototype = {
         try {
             if (typeof obj.splice === "function" && isFinite(obj.length))
                 return "array";
-            if (Object.prototype.toString.call(obj) === "[object Arguments]" && isFinite(obj.length)) // arguments.
-                return "array";
         } catch (e) {
         }
 
@@ -764,8 +762,11 @@ InjectedScript.prototype = {
         case 1: // Node.ELEMENT_NODE
             if (node.id)
                 description += "#" + node.id;
-            if (node.className)
-                description += "." + node.className.trim().replace(/\s+/g, ".");
+            if (node.hasAttribute("class")) {
+                // Using .getAttribute() is a workaround for SVG*Element.className returning SVGAnimatedString,
+                // which doesn't have any useful String methods. See <https://webkit.org/b/145363/>.
+                description += "." + node.getAttribute("class").trim().replace(/\s+/g, ".");
+            }
             return description;
 
         default:
@@ -1037,7 +1038,7 @@ InjectedScript.RemoteObject.prototype = {
 
         var propertiesThreshold = {
             properties: isTableRowsRequest ? 1000 : Math.max(5, firstLevelKeysCount),
-            indexes: isTableRowsRequest ? 1000 : Math.max(100, firstLevelKeysCount)
+            indexes: isTableRowsRequest ? 1000 : Math.max(10, firstLevelKeysCount)
         };
 
         try {

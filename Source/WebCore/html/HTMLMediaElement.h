@@ -32,9 +32,9 @@
 #include "GenericEventQueue.h"
 #include "GenericTaskQueue.h"
 #include "HTMLMediaElementEnums.h"
-#include "HTMLMediaSession.h"
 #include "MediaCanStartListener.h"
 #include "MediaControllerInterface.h"
+#include "MediaElementSession.h"
 #include "MediaProducer.h"
 #include "PageThrottler.h"
 
@@ -97,7 +97,7 @@ class MediaStream;
 
 class HTMLMediaElement
     : public HTMLElement
-    , private MediaPlayerClient, public MediaPlayerSupportsTypeClient, private MediaCanStartListener, public ActiveDOMObject, public MediaControllerInterface , public MediaSessionClient, private MediaProducer
+    , private MediaPlayerClient, public MediaPlayerSupportsTypeClient, private MediaCanStartListener, public ActiveDOMObject, public MediaControllerInterface , public PlatformMediaSessionClient, private MediaProducer
 #if ENABLE(VIDEO_TRACK)
     , private AudioTrackClient
     , private TextTrackClient
@@ -416,7 +416,7 @@ public:
 #endif
 
     MediaPlayerEnums::Preload preloadValue() const { return m_preload; }
-    HTMLMediaSession& mediaSession() const { return *m_mediaSession; }
+    MediaElementSession& mediaSession() const { return *m_mediaSession; }
 
 #if ENABLE(MEDIA_CONTROLS_SCRIPT)
     void pageScaleFactorChanged();
@@ -568,8 +568,9 @@ private:
 #endif
 
     virtual bool mediaPlayerShouldWaitForResponseToAuthenticationChallenge(const AuthenticationChallenge&) override;
-    virtual void mediaPlayerHandlePlaybackCommand(MediaSession::RemoteControlCommandType command) override { didReceiveRemoteControlCommand(command); }
+    virtual void mediaPlayerHandlePlaybackCommand(PlatformMediaSession::RemoteControlCommandType command) override { didReceiveRemoteControlCommand(command); }
     virtual String mediaPlayerSourceApplicationIdentifier() const override;
+    virtual Vector<String> mediaPlayerPreferredAudioCharacteristics() const override;
 
 #if PLATFORM(IOS)
     virtual String mediaPlayerNetworkInterfaceName() const override;
@@ -580,6 +581,7 @@ private:
     virtual void mediaPlayerEngineFailedToLoad() const override final;
 
     virtual double mediaPlayerRequestedPlaybackRate() const override final;
+    virtual VideoFullscreenMode mediaPlayerFullscreenMode() const override final { return fullscreenMode(); }
 
     void pendingActionTimerFired();
     void progressEventTimerFired();
@@ -688,17 +690,17 @@ private:
     bool ensureMediaControlsInjectedScript();
 #endif
 
-    // MediaSessionClient Overrides
-    virtual MediaSession::MediaType mediaType() const override;
-    virtual MediaSession::MediaType presentationType() const override;
-    virtual MediaSession::DisplayType displayType() const override;
+    // PlatformMediaSessionClient Overrides
+    virtual PlatformMediaSession::MediaType mediaType() const override;
+    virtual PlatformMediaSession::MediaType presentationType() const override;
+    virtual PlatformMediaSession::DisplayType displayType() const override;
     virtual void suspendPlayback() override;
     virtual void mayResumePlayback(bool shouldResume) override;
     virtual String mediaSessionTitle() const override;
     virtual double mediaSessionDuration() const override { return duration(); }
     virtual double mediaSessionCurrentTime() const override { return currentTime(); }
     virtual bool canReceiveRemoteControlCommands() const override { return true; }
-    virtual void didReceiveRemoteControlCommand(MediaSession::RemoteControlCommandType) override;
+    virtual void didReceiveRemoteControlCommand(PlatformMediaSession::RemoteControlCommandType) override;
     virtual bool overrideBackgroundPlaybackRestriction() const override;
 
     virtual void pageMutedStateDidChange() override;
@@ -892,7 +894,7 @@ private:
     RefPtr<PlatformTextTrackMenuInterface> m_platformMenu;
 #endif
 
-    std::unique_ptr<HTMLMediaSession> m_mediaSession;
+    std::unique_ptr<MediaElementSession> m_mediaSession;
     PageActivityAssertionToken m_activityToken;
     size_t m_reportedExtraMemoryCost;
 

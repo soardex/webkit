@@ -61,9 +61,9 @@ const AtomicString& MediaControlsHost::alwaysOnKeyword()
     return alwaysOn;
 }
 
-PassRefPtr<MediaControlsHost> MediaControlsHost::create(HTMLMediaElement* mediaElement)
+Ref<MediaControlsHost> MediaControlsHost::create(HTMLMediaElement* mediaElement)
 {
-    return adoptRef(new MediaControlsHost(mediaElement));
+    return adoptRef(*new MediaControlsHost(mediaElement));
 }
 
 MediaControlsHost::MediaControlsHost(HTMLMediaElement* mediaElement)
@@ -202,7 +202,7 @@ void MediaControlsHost::updateCaptionDisplaySizes()
         m_textTrackContainer->updateSizes(true);
 }
     
-bool MediaControlsHost::mediaPlaybackAllowsInline() const
+bool MediaControlsHost::allowsInlineMediaPlayback() const
 {
     return !m_mediaElement->mediaSession().requiresFullscreenForVideoPlayback(*m_mediaElement);
 }
@@ -283,6 +283,9 @@ String MediaControlsHost::mediaUIImageData(const String& partID) const
 #if PLATFORM(IOS)
     if (partID == "optimized-fullscreen-button")
         return wkGetMediaUIImageData(wkMediaUIPartOptimizedFullscreenButton);
+
+    if (partID == "optimized-fullscreen-return-button")
+        return wkGetMediaUIImageData(wkMediaUIPartOptimizedFullscreenReturnButton);
 
     if (partID == "optimized-fullscreen-placeholder")
         return wkGetMediaUIImageData(wkMediaUIPartOptimizedFullscreenPlaceholder);
